@@ -1,4 +1,5 @@
 node_modeles/
 vendor/
 .env
-.package-lock.json
+package-lock.json
+erikocompany-6996d1c4ae26.json

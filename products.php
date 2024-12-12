@@ -5,13 +5,6 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
 
-// Nu kan du använda $client med den autentiserade access token
-// Din kod för att interagera med Google Sheets API här...
-
-
-
-
-
 // Nu kan du använda $service för att interagera med Google Sheets API
 
 // Nu kan du använda $client för att göra API-anrop
