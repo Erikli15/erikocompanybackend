@@ -1,0 +1,4 @@
+node_modeles/
+vendor/
+.env
+.package-lock.json
