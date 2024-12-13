@@ -9,7 +9,7 @@ $dotenv->load();
 
 // Nu kan du använda $client för att göra API-anrop
 
-// } else {
+
 // foreach ($values as $row) {
 // // Anslut till din databas (exempel med MySQL)
 // $servername = getenv('DB_SERVERNAME');
@@ -42,5 +42,5 @@ $dotenv->load();
 
 // $conn->close();
 // }
-// }
+
 ?>

@@ -52,6 +52,23 @@ try {
     echo 'Spår: ' . $e->getTraceAsString() . "\n";
 }
 
+
+$columnNames = [["id", "productName", "price", "category", "descriptions", "stockStatus"]];
+
+$headerRange = $_ENV['RANGE'] . '!A1:F1';
+
+$headerBody = new \Google\Service\Sheets\ValueRange(['values' => $columnNames]);
+
+$headerParams = ['valueInputOption' => 'RAW'];
+
+try {
+    $headerResult = $service->spreadsheets_values->update($spreadsheetId, $headerRange, $headerBody, $headerParams);
+    echo "{$headerResult->getUpdatedCells()} cells updated with columnnames";
+} catch (Exception $e) {
+    echo "Wrong with columnnames: " . $e->getMessage() . "\n";
+}
+
+
 // Definiera data som ska läggas till
 $values = [
     ["Erik", 30], // Ny rad
