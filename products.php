@@ -1,4 +1,5 @@
 <?php
+error_reporting(E_ALL & ~E_DEPRECATED);
 // Inkludera filen som innehåller getDataFromGoogleSheet-funktionen
 require 'googleSheet.php';
 require 'vendor/autoload.php';
