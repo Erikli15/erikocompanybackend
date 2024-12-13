@@ -1,12 +1,23 @@
 {
   "dependencies": {
-    "@types/express": "^5.0.0",
     "@types/node": "^22.10.2",
     "dotenv": "^16.4.7",
-    "mysql2": "^3.11.5",
-    "typescript": "^5.7.2"
+    "express": "^4.21.2",
+    "mysql2": "^3.11.5"
   },
   "devDependencies": {
-    "@types/dotenv": "^6.1.1"
-  }
+    "@types/dotenv": "^6.1.1",
+    "@types/express": "^5.0.0",
+    "typescript": "^5.7.2"
+  },
+  "name": "erikocompanybackend",
+  "version": "1.0.0",
+  "description": "Examensarbete",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
