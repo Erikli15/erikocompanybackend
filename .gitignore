@@ -3,3 +3,5 @@ vendor/
 .env
 package-lock.json
 erikocompany-6996d1c4ae26.json
+tsconfig.json
+composer.lock
