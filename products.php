@@ -1,46 +1,48 @@
 <?php
+// Inkludera filen som innehåller getDataFromGoogleSheet-funktionen
+require 'googleSheet.php';
 require 'vendor/autoload.php';
-
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
+$username = $_ENV['DB_USERNAME'];
+$password = $_ENV['DB_PASSWORD'];
+$host = $_ENV['DB_SERVERNAME'];
+$dbname = $_ENV['DB_DBNAME'];
 
-// Nu kan du använda $service för att interagera med Google Sheets API
+// Anslut till databasen
+$dsn = "mysql:host=$host;dbname=$dbname;charset=utf8";
 
-// Nu kan du använda $client för att göra API-anrop
 
+try {
+    $pdo = new PDO($dsn, $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-// foreach ($values as $row) {
-// // Anslut till din databas (exempel med MySQL)
-// $servername = getenv('DB_SERVERNAME');
-// $username = getenv('DB_USERNAME');
-// $password = getenv('DB_PASSWORD');
-// $dbname = getenv('DB_DBNAME');
+    $data = getDataFromGoogleSheet($spreadsheetId, $service);
 
-// // Skapa anslutning
-// $conn = new mysqli($servername, $username, $password, $dbname);
+    // Infoga data i databasen
+    insertDataIntoDatabase($data, $pdo);
 
-// if ($conn->connect_error) {
-// die("Connection failed: " . $conn->connect_error);
-// }
+    echo "Data har framgångsrikt infogats i databasen.";
+} catch (PDOException $e) {
+    echo "Databasfel: " . $e->getMessage();
+}
 
-// // Förutsätt att kolumnerna är Produktnamn, Pris, Kategori, Lagerstatus
-// $productName = $row[0];
-// $price = $row[1];
-// $category = $row[2];
-// $stockStatus = $row[3];
+function insertDataIntoDatabase($data, $pdo)
+{
+    // Förbered SQL-frågan för att infoga data
+    $stmt = $pdo->prepare("INSERT INTO products (productName, price, category, descriptions, stockStatus) VALUES (?, ?, ?, ?, ?)");
 
-// // SQL-insert
-// $sql = "INSERT INTO products (product_name, price, category, stock_status)
-// VALUES ('$productName', '$price', '$category', '$stockStatus')";
+    // Loop igenom varje rad av data, börja från andra raden (index 1)
+    foreach ($data as $index => $row) {
+        if ($index === 0)
+            continue; // Hoppa över första raden (rubriker)
 
-// if ($conn->query($sql) === TRUE) {
-// echo "New record created successfully\n";
-// } else {
-// echo "Error: " . $sql . "<br>" . $conn->error;
-// }
-
-// $conn->close();
-// }
-
+        // Kontrollera att raden har tillräckligt med kolumner
+        if (count($row) >= 6) {
+            // Bind värdena till frågan
+            $stmt->execute([$row[1], (float) $row[2], $row[4], $row[4], $row[5]]); // Konvertera price till float
+        }
+    }
+}
 ?>
