@@ -1,7 +1,7 @@
 <?php
 error_reporting(E_ALL & ~E_DEPRECATED);
 // Inkludera filen som innehåller getDataFromGoogleSheet-funktionen
-require 'googleSheet.php';
+require_once 'googleSheet.php';
 require 'vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
@@ -44,15 +44,18 @@ class Databas
         $this->pdo->exec($sql);
         $initialized = true;
     }
-
     function insertProductsIntoDatabase($spreadsheetId, $service, $database)
     {
         // Hämta data från Google Sheets
         $values = getDataFromGoogleSheet($spreadsheetId, $service);
 
         // Förbered SQL-satsen för att lägga till produkter
-        $sql = "INSERT INTO products (productName, price, category, descriptions, stockStatus) VALUES (?,?,?,?,?)";
-        $stmt = $database->pdo->prepare($sql);
+        $sqlInsert = "INSERT INTO products (productName, price, category, descriptions, stockStatus) VALUES (?,?,?,?,?)";
+        $stmtInsert = $database->pdo->prepare($sqlInsert);
+
+        // Förbered SQL-satsen för att kontrollera om produkten redan finns
+        $sqlSelect = "SELECT COUNT(*) FROM products WHERE productName = ?";
+        $stmtSelect = $database->pdo->prepare($sqlSelect);
 
         // Loop genom varje rad av data
         foreach ($values as $index => $row) {
@@ -61,11 +64,28 @@ class Databas
 
             // Kontrollera att raden har tillräckligt med kolumner
             if (count($row) >= 6) {
-                // Bind värdena till frågan
-                $stmt->execute([$row[1], (float) $row[2], $row[4], $row[4], $row[5]]); // Konvertera price till float
+                // Kontrollera om produkten redan finns
+                $stmtSelect->execute([$row[1]]);
+                $exists = $stmtSelect->fetchColumn();
+
+                // Om produkten inte finns, lägg till den
+                if ($exists == 0) {
+                    $stmtInsert->execute([$row[1], (float) $row[2], $row[4], $row[4], $row[5]]); // Konvertera price till float
+                }
             }
         }
     }
 
+    function getProductIds()
+    {
+        $sql = "SELECT id FROM products";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+
+        // Hämta alla ID:n som en array
+        $ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return $ids;
+    }
 }
+
 ?>
