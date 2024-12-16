@@ -1,29 +1,29 @@
 <?php
 error_reporting(E_ALL & ~E_DEPRECATED);
-require 'vendor/autoload.php';
+require "vendor/autoload.php";
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 use Google\Client;
 use Google\Service\Sheets;
 $client = new Client();
-$client->setHttpClient(new \GuzzleHttp\Client(['verify' => false]));
+$client->setHttpClient(new \GuzzleHttp\Client(["verify" => false]));
 
-$client->setApplicationName('Google Sheets API PHP');
+$client->setApplicationName("Google Sheets API PHP");
 $client->setScopes([Sheets::SPREADSHEETS]);
-$client->setAuthConfig($_ENV['GOOGLE_AUTH_CONFIG']);
-$client->setConfig('debug', true);
+$client->setAuthConfig($_ENV["GOOGLE_AUTH_CONFIG"]);
+$client->setConfig("debug", true);
 
-$spreadsheetId = $_ENV['SPREADSHEET_ID'];
+$spreadsheetId = $_ENV["SPREADSHEET_ID"];
 $service = new Sheets($client);
 
 
 $columnNames = [["id", "productName", "price", "category", "descriptions", "stockStatus"]];
 
-$headerRange = $_ENV['RANGE'] . '!A1:F1';
+$headerRange = $_ENV["RANGE"] . "!A1:F1";
 
-$headerBody = new \Google\Service\Sheets\ValueRange(['values' => $columnNames]);
+$headerBody = new \Google\Service\Sheets\ValueRange(["values" => $columnNames]);
 
-$headerParams = ['valueInputOption' => 'RAW'];
+$headerParams = ["valueInputOption" => "RAW"];
 
 try {
     $headerResult = $service->spreadsheets_values->update($spreadsheetId, $headerRange, $headerBody, $headerParams);
@@ -33,14 +33,14 @@ try {
 }
 function getDataFromGoogleSheet($spreadsheetId, $service)
 {
-    $range = $_ENV['RANGE'];
+    $range = $_ENV["RANGE"];
     $respones = $service->spreadsheets_values->get($spreadsheetId, $range);
     $values = $respones->getValues();
     return $values;
 }
 
 
-require_once 'products.php';
+require_once "products.php";
 
 $insertedId = $database->getProductIds();
 
@@ -54,13 +54,13 @@ foreach ($insertedId as $id) {
 }
 
 // Definiera området där du vill sätta in ID:n, t.ex. A2:A (kolumn A, rad 2 och neråt)
-$insertRange = $_ENV['RANGE'] . '!A2:A';
+$insertRange = $_ENV["RANGE"] . "!A2:A";
 
 // Skapa en ValueRange för att skicka data
-$insertBody = new \Google\Service\Sheets\ValueRange(['values' => $valuesToInsert]);
+$insertBody = new \Google\Service\Sheets\ValueRange(["values" => $valuesToInsert]);
 
 // Parametrar för att sätta in värden
-$insertParams = ['valueInputOption' => 'RAW'];
+$insertParams = ["valueInputOption" => "RAW"];
 
 try {
     // Uppdatera Google Sheets med ID:n

@@ -1,8 +1,8 @@
 <?php
 error_reporting(E_ALL & ~E_DEPRECATED);
 // Inkludera filen som innehåller getDataFromGoogleSheet-funktionen
-require_once 'googleSheet.php';
-require 'vendor/autoload.php';
+require_once "googleSheet.php";
+require "vendor/autoload.php";
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
@@ -17,10 +17,10 @@ class Databas
 
     function __construct()
     {
-        $username = $_ENV['DB_USERNAME'];
-        $password = $_ENV['DB_PASSWORD'];
-        $host = $_ENV['DB_SERVERNAME'];
-        $dbname = $_ENV['DB_DBNAME'];
+        $username = $_ENV["DB_USERNAME"];
+        $password = $_ENV["DB_PASSWORD"];
+        $host = $_ENV["DB_SERVERNAME"];
+        $dbname = $_ENV["DB_DBNAME"];
         $dsn = "mysql:host=$host;dbname=$dbname";
         $this->pdo = new PDO($dsn, $username, $password);
         $this->ifTabletNotExist();

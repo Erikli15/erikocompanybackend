@@ -25,7 +25,7 @@ db.connect(err => {
 });
 
 // Hämta produkter från databasen
-app.get('/products', (req: Request, res: Response) => {
+app.get("/", (req: Request, res: Response) => {
     const sql = 'SELECT * FROM products';
     db.query(sql, (err, results) => {
         if (err) {
@@ -35,6 +35,7 @@ app.get('/products', (req: Request, res: Response) => {
         res.json(results);
     });
 });
+
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
