@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Request, response, Response } from 'express';
 import mysql from 'mysql2';
 import dotenv from 'dotenv';
 import passport from 'passport';
@@ -7,6 +7,7 @@ import session from 'express-session';
 import bodyParser from 'body-parser';
 // import KlarnaService from './klarnaService';
 import axios from 'axios';
+import { error } from 'console';
 
 dotenv.config();
 
@@ -156,6 +157,12 @@ interface OrderRequest {
   merchant_urls: MerchantUrls;
 }
 
+interface KlarnaResponse {
+  session_id?: string; // Gör den valfri med '?'
+  // Lägg till andra fält som kan finnas i svaret om det behövs
+}
+
+
 const basicAuth = Buffer.from(`${KLARNA_USER}:${API_KLARNA}`).toString('base64');
 
 const orderRequest: OrderRequest = {
@@ -186,23 +193,36 @@ const orderRequest: OrderRequest = {
   }
 };
 
-console.log(orderRequest);
+let sessionId: string | undefined;
 
-axios.post('https://api.playground.klarna.com/payments/v1/sessions', orderRequest, {
+axios.post<KlarnaResponse>('https://api.playground.klarna.com/payments/v1/sessions', orderRequest, {
   headers: {
-    'Authorization': `Basic ${basicAuth}` // Use Basic Auth
+    'Authorization': `Basic ${basicAuth}` // Använd Basic Auth
   }
 })
   .then(response => {
-    console.log('Order sent successfully:', response.data);
+    if (response.data && response.data.session_id) {
+      sessionId = response.data.session_id;
+      console.log('Session ID:', sessionId);
+
+      // Gör en GET-begäran med sessionId här
+      return axios.get<KlarnaResponse>(`https://api.playground.klarna.com/payments/v1/sessions/${sessionId}`, {
+        headers: {
+          'Authorization': `Basic ${basicAuth}`
+        }
+      });
+    } else {
+      console.log("session_id finns inte i response.data");
+    }
+  })
+  .then(response => {
+    if (response) {
+      console.log(response.data);
+    }
   })
   .catch(error => {
-    console.error('Error sending order:', error);
+    console.error('Error:', error);
   });
-
-
-
-
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
