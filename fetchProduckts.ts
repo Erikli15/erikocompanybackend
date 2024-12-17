@@ -4,12 +4,16 @@ import dotenv from 'dotenv';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import session from 'express-session';
+import bodyParser from 'body-parser';
+// import KlarnaService from './klarnaService';
+import axios from 'axios';
 
 dotenv.config();
 
 //Expressservice 
 const app = express();
 const port = 3000;
+app.use(bodyParser.json());
 
 // Skapa MySQL-anslutning
 const db = mysql.createConnection({
@@ -116,6 +120,89 @@ app.get("/", (req: Request, res: Response) => {
         res.send(`<button><a href='/auth/google'>Login with Google</a></button>`);
     }
 });
+
+//klarna
+
+const API_KLARNA = process.env.KLARNA_API_KEY || 'default_secret_key';
+const KLARNA_USER = process.env.KLARNA_USER || 'default_user';
+
+interface OrderLine {
+  type: string;
+  reference: string;
+  name: string;
+  quantity: number;
+  unit_price: number;
+  tax_rate: number;
+  total_amount: number;
+  total_discount_amount: number;
+  total_tax_amount: number;
+  image_url: string;
+  product_url: string;
+}
+
+interface MerchantUrls {
+  authorization: string;
+}
+
+interface OrderRequest {
+  acquiring_channel: string;
+  intent: string;
+  purchase_country: string;
+  purchase_currency: string;
+  locale: string;
+  order_amount: number;
+  order_tax_amount: number;
+  order_lines: OrderLine[];
+  merchant_urls: MerchantUrls;
+}
+
+const basicAuth = Buffer.from(`${KLARNA_USER}:${API_KLARNA}`).toString('base64');
+
+const orderRequest: OrderRequest = {
+  acquiring_channel: "ECOMMERCE",
+  intent: "buy",
+  purchase_country: "SE",
+  purchase_currency: "SEK",
+  locale: "en-SE",
+  order_amount: 9500,
+  order_tax_amount: 1900,
+  order_lines: [
+    {
+      type: "physical",
+      reference: "19-402",
+      name: "Battery Power Pack",
+      quantity: 1,
+      unit_price: 10000,
+      tax_rate: 2500,
+      total_amount: 9500,
+      total_discount_amount: 500,
+      total_tax_amount: 1900,
+      image_url: "https://www.exampleobjects.com/logo.png",
+      product_url: "https://www.estore.com/products/f2a8d7e34"
+    }
+  ],
+  merchant_urls: {
+    authorization: "https://example.com/authorization_callbacks"
+  }
+};
+
+console.log(orderRequest);
+
+axios.post('https://api.playground.klarna.com/payments/v1/sessions', orderRequest, {
+  headers: {
+    'Authorization': `Basic ${basicAuth}` // Use Basic Auth
+  }
+})
+  .then(response => {
+    console.log('Order sent successfully:', response.data);
+  })
+  .catch(error => {
+    console.error('Error sending order:', error);
+  });
+
+
+
+
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
