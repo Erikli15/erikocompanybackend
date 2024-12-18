@@ -5,7 +5,6 @@ import session from 'express-session';
 
 dotenv.config();
 
-// Google login
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
 const COOKIE_SECRET_KEY = process.env.COOKIE_SECRET_KEY || 'default_secret_key';
@@ -26,15 +25,15 @@ export const configurePassport = () => {
         callbackURL: 'http://localhost:3000/auth/google/callback',
     },
     (accessToken: string, refreshToken: string, profile: any, done: Function) => {
-        return done(profile);
+        return done(null, profile);
     }));
 
     passport.serializeUser ((user: any, done: Function) => {
-        done(user);
+        done(null, user);
     });
 
     passport.deserializeUser ((obj: any, done: Function) => {
-        done(obj);
+        done(null, obj);
     });
 };
 
@@ -44,16 +43,32 @@ export const authenticateGoogle = () => {
     });
 };
 
-export const handleGoogleCallback = () => {
-    passport.authenticate("google", { failureRedirect: "/login" }),
-    (req: any, res: any) => {
-        res.redirect("/");
-    };
+export const handleGoogleCallback = async (req: any, res: any) => {
+    return new Promise((resolve: Function, reject: Function) => {
+        passport.authenticate("google", { failureRedirect: "/login" }, (err, user, info) => {
+            if (err) {
+                return reject(err);
+            }
+            if (!user) {
+                return reject(new Error("No user found"));
+            }
+            req.logIn(user, (err:any) => {
+                if (err) {
+                    return reject(err);
+                }
+                res.redirect("/");
+                resolve();
+            });
+        })(req, res);
+    });
 };
 
-export const logoutUser  = (req: any, res: any) => {
-    req.logout(() => {
-        res.redirect("/");
+export const logoutUser  = async (req: any, res: any) => {
+    return new Promise((resolve : Function, reject: Function) => {
+        req.logout(() => {
+            res.redirect("/");
+            resolve();
+        });
     });
 };
 

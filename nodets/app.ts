@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import { getAllProducts, getProductById } from './db/fetchProducts';
-import { configureSession, configurePassport, authenticateGoogle, handleGoogleCallback, logoutUser } from './googlelogin/googleLogin';
+import { configureSession, configurePassport, authenticateGoogle, handleGoogleCallback, logoutUser  } from './googlelogin/googleLogin';
 import passport from 'passport';
 
 const app = express();
@@ -35,20 +35,25 @@ app.get('/products/:id', (req:Request, res: Response) => {
 
 
 //google
+// Konfigurera session och Passport
 app.use(configureSession());
 app.use(passport.initialize());
 app.use(passport.session());
 configurePassport();
+
+// Definiera rutter
 app.get('/auth/google', authenticateGoogle());
-app.get('/auth/google/callback', handleGoogleCallback);
-app.get('/logout', logoutUser );
-app.get("/", (req: Request, res: Response) => {
-    if(req.isAuthenticated()){
-        res.send(`<h1>Welcome Namn:Erik</h1><br><button><a href='/logout'Logout</a></button>`);
-    } else{
+app.get('/auth/google/callback', handleGoogleCallback as (req: Request, res: Response) => Promise<void>);
+app.get('/logout', logoutUser as (req: Request, res: Response) => Promise<void>);
+
+app.get("/", (req, res) => {
+    if (req.isAuthenticated()) {
+        res.send(`<h1>Welcome Namn: Erik</h1><br><button><a href='/logout'>Logout</a></button>`);
+    } else {
         res.send(`<button><a href='/auth/google'>Login with Google</a></button>`);
     }
 });
+
 
 
 app.listen(port, () => {
