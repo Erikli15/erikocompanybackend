@@ -1,11 +1,14 @@
 <?php
+
+use Google\Service\BigLakeService\Database;
 error_reporting(E_ALL & ~E_DEPRECATED);
 require "vendor/autoload.php";
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->load();
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../'); // Adjust the path as necessary
 use Google\Client;
 use Google\Service\Sheets;
 $client = new Client();
+$dotenv->load();
+
 $client->setHttpClient(new \GuzzleHttp\Client(["verify" => false]));
 
 $client->setApplicationName("Google Sheets API PHP");
@@ -41,7 +44,7 @@ function getDataFromGoogleSheet($spreadsheetId, $service)
 
 
 require_once "products.php";
-
+$database = new Databas();
 $insertedId = $database->getProductIds();
 
 // Anta att $insertedId är en array av produkt-ID:n

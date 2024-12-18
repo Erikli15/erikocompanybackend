@@ -20,6 +20,7 @@
     "@types/express-session": "^1.18.1",
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.16",
+    "concurrently": "^9.1.0",
     "typescript": "^5.7.2"
   },
   "name": "erikocompanybackend",
@@ -29,7 +30,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "start": "ts-node app.ts"
+    "start": "concurrently \"php -S localhost:8000 -t . php/googleSheet.php\" \"php -S localhost:8000 -t . php/products.php\" \"npx ts-node nodets/app.ts\""
   },
   "keywords": [],
   "author": "",

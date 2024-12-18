@@ -3,7 +3,7 @@ error_reporting(E_ALL & ~E_DEPRECATED);
 // Inkludera filen som innehåller getDataFromGoogleSheet-funktionen
 require_once "googleSheet.php";
 require "vendor/autoload.php";
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../'); // Adjust the path as necessary
 $dotenv->load();
 
 $database = new Databas();
