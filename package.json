@@ -30,7 +30,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "start": "concurrently \"php -S localhost:8000 -t . php/googleSheet.php\" \"php -S localhost:8000 -t . php/products.php\" \"npx ts-node nodets/app.ts\""
+    "start": "concurrently  \"php -S localhost:8000 -t . php/products.php\" \"npx ts-node nodets/app.ts\""
   },
   "keywords": [],
   "author": "",

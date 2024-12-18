@@ -20,9 +20,9 @@ $spreadsheetId = $_ENV["SPREADSHEET_ID"];
 $service = new Sheets($client);
 
 
-$columnNames = [["id", "productName", "price", "category", "descriptions", "stockStatus"]];
+$columnNames = [["id", "productName", "price", "category", "descriptions", "stockStatus", "imgUrl"]];
 
-$headerRange = $_ENV["RANGE"] . "!A1:F1";
+$headerRange = $_ENV["RANGE"] . "!A1:G1";
 
 $headerBody = new \Google\Service\Sheets\ValueRange(["values" => $columnNames]);
 

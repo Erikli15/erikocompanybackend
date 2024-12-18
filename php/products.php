@@ -38,6 +38,7 @@ class Databas
                 `category` varchar(100),
                 `descriptions` varchar(1000),
                 `stockStatus` INT,
+                `imgUrl` varchar(1000),
                 PRIMARY KEY (`id`)
                 ) ";
 
@@ -50,7 +51,7 @@ class Databas
         $values = getDataFromGoogleSheet($spreadsheetId, $service);
 
         // Förbered SQL-satsen för att lägga till produkter
-        $sqlInsert = "INSERT INTO products (productName, price, category, descriptions, stockStatus) VALUES (?,?,?,?,?)";
+        $sqlInsert = "INSERT INTO products (productName, price, category, descriptions, stockStatus, imgUrl) VALUES (?,?,?,?,?,?)";
         $stmtInsert = $database->pdo->prepare($sqlInsert);
 
         // Förbered SQL-satsen för att kontrollera om produkten redan finns
