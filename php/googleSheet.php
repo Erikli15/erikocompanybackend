@@ -45,7 +45,6 @@ function getDataFromGoogleSheet($spreadsheetId, $service)
 
 require_once "products.php";
 $database = new Databas();
-$insertedId = $database->getProductIds();
 
 // Anta att $insertedId är en array av produkt-ID:n
 $insertedId = $database->getProductIds();
@@ -71,6 +70,33 @@ try {
     echo "{$insertResult->getUpdatedCells()} cells updated with product IDs";
 } catch (Exception $e) {
     echo "Something went wrong with inserting product IDs: " . $e->getMessage() . "\n";
+}
+
+
+$updateStockStatus = $database->decreaseStockStatus($productName);
+// Anropa decreaseStockStatus för att minska lagret
+if ($updateStockStatus) {
+    // Om lagret minskades, uppdatera Google Sheets
+    $newStockStatus = $currentStockStatus - 1;
+
+    // Definiera området där du vill uppdatera stockStatus, t.ex. F2:F (kolumn F, rad 2 och neråt)
+    $updateRange = $_ENV["RANGE"] . "!F2:F"; // Justera efter behov
+
+    // Skapa en ValueRange för att skicka data
+    $updateBody = new \Google\Service\Sheets\ValueRange(["values" => [[$newStockStatus]]]);
+
+    // Parametrar för att sätta in värden
+    $updateParams = ["valueInputOption" => "RAW"];
+
+    try {
+        // Uppdatera Google Sheets med det nya lagervärdet
+        $updateResult = $service->spreadsheets_values->update($spreadsheetId, $updateRange, $updateBody, $updateParams);
+        echo "{$updateResult->getUpdatedCells()} cells updated with new stock status for $productName";
+    } catch (Exception $e) {
+        echo "Something went wrong with updating stock status: " . $e->getMessage() . "\n";
+    }
+} else {
+    echo "Stock status could not be decreased for $productName.\n";
 }
 
 ?>

@@ -64,14 +64,14 @@ class Databas
                 continue; // Hoppa över första raden (rubriker)
 
             // Kontrollera att raden har tillräckligt med kolumner
-            if (count($row) >= 6) {
+            if (count($row) >= 7) {
                 // Kontrollera om produkten redan finns
                 $stmtSelect->execute([$row[1]]);
                 $exists = $stmtSelect->fetchColumn();
 
                 // Om produkten inte finns, lägg till den
                 if ($exists == 0) {
-                    $stmtInsert->execute([$row[1], (float) $row[2], $row[4], $row[4], $row[5]]); // Konvertera price till float
+                    $stmtInsert->execute([$row[1], (float) $row[2], $row[4], $row[4], $row[5], $row[6]]); // Konvertera price till float
                 }
             }
         }
@@ -86,6 +86,24 @@ class Databas
         // Hämta alla ID:n som en array
         $ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
         return $ids;
+    }
+
+
+    function decreaseStockStatus($productName)
+    {
+        // Förbered SQL-satsen för att minska lagret
+        $sqlUpdate = "UPDATE products SET stockStatus = stockStatus - 1 WHERE productName = ? AND stockStatus > 0";
+        $stmtUpdate = $this->pdo->prepare($sqlUpdate);
+
+        // Utför uppdateringen
+        $stmtUpdate->execute([$productName]);
+
+        // Kontrollera om någon rad påverkades (dvs. om lagret minskades)
+        if ($stmtUpdate->rowCount() > 0) {
+            return true; // Lager minskades framgångsrikt
+        } else {
+            return false; // Ingen förändring, antingen produkten finns inte eller lagret är redan 0
+        }
     }
 }
 
