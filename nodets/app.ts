@@ -3,12 +3,19 @@ import bodyParser from 'body-parser';
 import { getAllProducts, getProductById } from './db/fetchProducts';
 import { configureSession, configurePassport, authenticateGoogle, handleGoogleCallback, logoutUser  } from './googlelogin/googleLogin';
 import passport from 'passport';
+import cors from 'cors';
 
 const app = express();
 const port = 3000;
 app.use(bodyParser.json());
-
-
+app.use(cors())
+app.use(express.static('public', {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.js')) {
+            res.setHeader('Content-Type', 'text/javascript');
+        }
+    }
+}));
 //produkter 
 app.get('/products', (req: Request, res: Response) => {
     getAllProducts((err:any, products:[]) => {

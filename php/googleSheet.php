@@ -73,30 +73,40 @@ try {
 }
 
 
-$updateStockStatus = $database->decreaseStockStatus($productName);
-// Anropa decreaseStockStatus för att minska lagret
-if ($updateStockStatus) {
+// Kontrollera om $productName är definierad
+if (isset($productName)) {
+    // Anropa decreaseStockStatus och få svaret
+    $updateStockStatus = $database->decreaseStockStatus($productName);
+
     // Om lagret minskades, uppdatera Google Sheets
-    $newStockStatus = $currentStockStatus - 1;
+    if ($updateStockStatus) {
+        // Hämta det aktuella lagret (detta kan behöva justeras beroende på din databasstruktur)
+        $currentStockStatus = $database->decreaseStockStatus($productName); // Du behöver implementera denna metod
 
-    // Definiera området där du vill uppdatera stockStatus, t.ex. F2:F (kolumn F, rad 2 och neråt)
-    $updateRange = $_ENV["RANGE"] . "!F2:F"; // Justera efter behov
+        // Beräkna det nya lagret
+        $newStockStatus = $currentStockStatus - 1;
 
-    // Skapa en ValueRange för att skicka data
-    $updateBody = new \Google\Service\Sheets\ValueRange(["values" => [[$newStockStatus]]]);
+        // Definiera området där du vill uppdatera lagret, t.ex. F2:F
+        $updateRange = $_ENV["RANGE"] . "!F2:F"; // Justera om nödvändigt
 
-    // Parametrar för att sätta in värden
-    $updateParams = ["valueInputOption" => "RAW"];
+        // Skapa en ValueRange för att skicka data
+        $updateBody = new \Google\Service\Sheets\ValueRange(["values" => [[$newStockStatus]]]);
 
-    try {
-        // Uppdatera Google Sheets med det nya lagervärdet
-        $updateResult = $service->spreadsheets_values->update($spreadsheetId, $updateRange, $updateBody, $updateParams);
-        echo "{$updateResult->getUpdatedCells()} cells updated with new stock status for $productName";
-    } catch (Exception $e) {
-        echo "Something went wrong with updating stock status: " . $e->getMessage() . "\n";
+        // Parametrar för att sätta in värden
+        $updateParams = ["valueInputOption" => "RAW"];
+
+        try {
+            // Uppdatera Google Sheets med det nya lagret
+            $updateResult = $service->spreadsheets_values->update($spreadsheetId, $updateRange, $updateBody, $updateParams);
+            echo "{$updateResult->getUpdatedCells()} cells updated with new stock status for $productName";
+        } catch (Exception $e) {
+            echo "Something went wrong with updating stock status: " . $e->getMessage() . "\n";
+        }
+    } else {
+        echo "Stock status could not be decreased for $productName.\n";
     }
 } else {
-    echo "Stock status could not be decreased for $productName.\n";
+    echo "Product name is not defined.\n";
 }
 
 ?>
