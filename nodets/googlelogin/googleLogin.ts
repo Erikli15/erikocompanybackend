@@ -14,7 +14,7 @@ export const configureSession = () => {
         secret: COOKIE_SECRET_KEY,
         resave: false,
         saveUninitialized: true,
-        cookie: { secure: false } // Ställ in till true om du använder HTTPS
+        cookie: { secure: false } // Set to true if using HTTPS
     });
 };
 
@@ -37,10 +37,14 @@ export const configurePassport = () => {
     });
 };
 
-export const authenticateGoogle = () => {
-    return passport.authenticate("google", {
-        scope: ["profile", "email"],
-    });
+export const authenticateGoogle = (req: any, res: any) => {
+    // Save the current URL in the session before login
+    req.session.previousPage = req.headers.referer || 'http://localhost:4200/';
+    
+    return passport.authenticate('google', {
+        scope: ['profile', 'email'], // Scope to access profile and email
+        prompt: 'select_account' // Ask the user to select an account every time
+    })(req, res);
 };
 
 export const handleGoogleCallback = async (req: any, res: any) => {
@@ -52,11 +56,14 @@ export const handleGoogleCallback = async (req: any, res: any) => {
             if (!user) {
                 return reject(new Error("No user found"));
             }
-            req.logIn(user, (err:any) => {
+            req.logIn(user, (err: any) => {
                 if (err) {
                     return reject(err);
                 }
-                res.redirect("/");
+
+                // Retrieve the saved URL from the session and redirect the user
+                const previousPage = req.session.previousPage || 'http://localhost:4200/';
+                res.redirect(previousPage);
                 resolve();
             });
         })(req, res);
@@ -64,11 +71,20 @@ export const handleGoogleCallback = async (req: any, res: any) => {
 };
 
 export const logoutUser  = async (req: any, res: any) => {
-    return new Promise((resolve : Function, reject: Function) => {
-        req.logout(() => {
-            res.redirect("/");
-            resolve();
+    return new Promise((resolve: Function, reject: Function) => {
+        req.logout((err: any) => { // Add a callback function here
+            if (err) {
+                return reject(err);
+            }
+            // Clear the saved URL from the session
+            req.session.destroy((err: any) => {
+                if (err) {
+                    return reject(err);
+                }
+                const previousPage = req.session.previousPage || 'http://localhost:4200/';
+                res.redirect(previousPage);
+                resolve()
+            });
         });
     });
 };
-

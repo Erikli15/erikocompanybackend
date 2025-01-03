@@ -1,10 +1,9 @@
-import express, { Request, Response } from 'express';
+import express, { Request, response, Response } from 'express';
 import bodyParser from 'body-parser';
 import { getAllProducts, getProductById } from './db/fetchProducts';
 import { configureSession, configurePassport, authenticateGoogle, handleGoogleCallback, logoutUser  } from './googlelogin/googleLogin';
 import passport from 'passport';
 import cors from 'cors';
-import path from 'path';
 
 
 const app = express();
@@ -42,20 +41,20 @@ app.get('/products/:id', (req:Request, res: Response) => {
     });
 });
 
+app.get('/', (req:Request, res:Response) =>{
+    res.send("Hej");
+})
 
-//google
-// Konfigurera session och Passport
+// Configure session and Passport
 app.use(configureSession());
 app.use(passport.initialize());
 app.use(passport.session());
 configurePassport();
 
-// Definiera rutter
-app.get('/auth/google', authenticateGoogle());
-app.get('/auth/google/callback', handleGoogleCallback as (req: Request, res: Response) => Promise<void>);
-app.get('/logout', logoutUser as (req: Request, res: Response) => Promise<void>);
-
-
+// Define routes
+app.get('/auth/google', authenticateGoogle);
+app.get('/auth/google/callback', handleGoogleCallback as (req: express.Request, res: express.Response) => Promise<void>);
+app.get('/logout', logoutUser  as (req: express.Request, res: express.Response) => Promise<void>);
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
