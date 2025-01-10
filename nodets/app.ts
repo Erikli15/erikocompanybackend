@@ -10,7 +10,7 @@ const app = express();
 const port = 3000;
 app.use(bodyParser.json());
 app.use(cors({
-    origin: ' http://localhost:4200/', // Din frontend URL
+    origin: 'http://localhost:4200', // Din frontend URL
     methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type']
   }));
