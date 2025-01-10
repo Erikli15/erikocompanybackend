@@ -1,39 +1,27 @@
-import {KlarnaResponse, orderRequest} from './klarnaService';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const API_KLARNA = process.env.KLARNA_API_KEY || 'default_secret_key';
-const KLARNA_USER = process.env.KLARNA_USER || 'default_user';
-  export const basicAuth = Buffer.from(`${KLARNA_USER}:${API_KLARNA}`).toString('base64');
-
-let sessionId: string | undefined;
-
-axios.post<KlarnaResponse>('https://api.playground.klarna.com/payments/v1/sessions', orderRequest, {
-  headers: {
-    'Authorization': `Basic ${basicAuth}` // Använd Basic Auth
-  }
-})
-  .then(response => {
-    if (response.data && response.data.session_id) {
-      sessionId = response.data.session_id;
-      console.log('Session ID:', sessionId);
-
-      // Gör en GET-begäran med sessionId här
-      return axios.get<KlarnaResponse>(`https://api.playground.klarna.com/payments/v1/sessions/${sessionId}`, {
-        headers: {
-          'Authorization': `Basic ${basicAuth}`
-        }
-      });
-    } else {
-      console.log("session_id finns inte i response.data");
-    }
-  })
-  .then(response => {
-    if (response) {
-      console.log(response.data);
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-  });
+// Construct the order data for Klarna
+export const constructOrderData = (orderData: any) => {
+    return {
+      purchase_country: orderData.billingCountry,
+  purchase_currency: 'SEK',
+  locale: 'sv-SE',
+  order_amount: orderData.orderDetails.unitPrice * orderData.orderDetails.quantity,
+  order_tax_amount: (orderData.orderDetails.unitPrice * orderData.orderDetails.quantity) * (orderData.orderDetails.taxRate / 100),
+  order_lines: [
+    {
+      name: orderData.orderDetails.product,
+      quantity: orderData.orderDetails.quantity,
+      unit_price: orderData.orderDetails.unitPrice,
+      total_amount: orderData.orderDetails.unitPrice * orderData.orderDetails.quantity,
+      total_tax_amount: (orderData.orderDetails.unitPrice * orderData.orderDetails.quantity) * (orderData.orderDetails.taxRate / 100),
+      tax_rate: orderData.orderDetails.taxRate * 100,
+      currency: 'SEK',
+    },
+  ],
+      merchant_urls: {
+        terms: 'https://yourwebsite.com/terms',
+        checkout: 'http://localhost:4200/checkout',
+        confirmation: 'https://yourwebsite.com/confirmation',
+        push: 'https://yourwebsite.com/push'
+      },
+    };
+  };

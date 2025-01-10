@@ -2,14 +2,18 @@ import express, { Request, response, Response } from 'express';
 import bodyParser from 'body-parser';
 import { getAllProducts, getProductById } from './db/fetchProducts';
 import { configureSession, configurePassport, authenticateGoogle, handleGoogleCallback, logoutUser  } from './googlelogin/googleLogin';
+import { createKlarnaOrder} from './klarna/klarnaService'; // Import service function
 import passport from 'passport';
 import cors from 'cors';
-
 
 const app = express();
 const port = 3000;
 app.use(bodyParser.json());
-app.use(cors())
+app.use(cors({
+    origin: ' http://localhost:4200/', // Din frontend URL
+    methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type']
+  }));
 app.use(express.static('public', {
     setHeaders: (res, path) => {
         if (path.endsWith('.js')) {
@@ -56,6 +60,19 @@ app.get('/auth/google', authenticateGoogle);
 app.get('/auth/google/callback', handleGoogleCallback as (req: express.Request, res: express.Response) => Promise<void>);
 app.get('/logout', logoutUser  as (req: express.Request, res: express.Response) => Promise<void>);
 
+
+app.post('/api/create-order', async (req, res) => {
+    try {
+      const orderData = req.body;
+      const klarnaOrderResponse = await createKlarnaOrder(orderData);
+      res.status(200).json(klarnaOrderResponse);
+    } catch (error) {
+      console.error('Error creating order:', error);
+      res.status(500).json({ error: 'Failed to create order' });
+    }
+  });
+  
+  
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
-});
+})
