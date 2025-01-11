@@ -174,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $database->insertProductsIntoDatabase($spreadsheetId, $service, $database);
         echo "Produkter har infogats i databasen.";
     } elseif (isset($_POST['updateProducts'])) {
-        // Kör updateProductsFromGoogleSheet
+        // Kör updateProductsFromGoogleS    heet
         $database->updateProductsFromGoogleSheet($spreadsheetId, $service);
         echo "Produkter har uppdaterats i databasen.";
     } elseif (isset($_POST['decreaseStock'])) {
