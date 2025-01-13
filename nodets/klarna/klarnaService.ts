@@ -17,7 +17,7 @@ const klarnaApiKey = process.env.KLARNA_API_KEY || "";
 // Function to create an order with Klarna API
 export const createKlarnaOrder = async (orderData: any) => {
   try {
-    const orderPayload = constructOrderData(orderData);
+    const orderPayload = constructOrderData(orderData);    
     console.log('Order Payload:', orderPayload); // Log the payload for debugging
 
     const response = await axios.post<KlarnaOrderResponse>(klarnaApiUrl, orderPayload, {

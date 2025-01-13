@@ -5,7 +5,6 @@ import { configureSession, configurePassport, authenticateGoogle, handleGoogleCa
 import { createKlarnaOrder} from './klarna/klarnaService'; // Import service function
 import passport from 'passport';
 import cors from 'cors';
-import { constructOrderData } from './klarna/klarnaPay';
 import { console } from 'inspector';
 
 const app = express();
@@ -66,6 +65,7 @@ app.get('/logout', logoutUser  as (req: express.Request, res: express.Response) 
 app.post('/api/create-order', async (req, res) => {
     try {
       const orderData = req.body;
+  
       const klarnaOrderResponse = await createKlarnaOrder(orderData);
       res.status(200).json(klarnaOrderResponse);
     } catch (error) {

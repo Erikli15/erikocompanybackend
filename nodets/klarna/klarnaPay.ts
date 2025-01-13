@@ -1,50 +1,69 @@
 export const constructOrderData = (orderData: any) => {
-  // Beräkna det totala beloppet utan avrundning
-  const totalAmount = orderData.orderDetails.unitPrice * orderData.orderDetails.quantity;
-  const taxRate = orderData.orderDetails.taxRate;
+  let totalAmount = 0;
+  let totalTaxAmount = 0;
+  const orderLines: any[] = [];
 
-  // Omvandla belopp till ören (multiplicera med 100)
-  const totalAmountInOre = Math.round(totalAmount * 100); // Totalt belopp i ören
+  // Hantera orderlinjer
+  orderData.orderDetails.forEach((orderDetail: any) => {
+    const unitPriceInOre = Math.round(orderDetail.unitPrice * 100);
+    const totalAmountForProduct = unitPriceInOre * orderDetail.quantity;
+    const totalTaxAmountForProduct = Math.round((totalAmountForProduct * (orderDetail.taxRate / 10000)) * 100) / 100;
+    totalAmount += totalAmountForProduct;
+    totalTaxAmount += totalTaxAmountForProduct;
 
-  // Skapa skattebeloppet (vi justerar manuellt här)
-  const totalTaxAmountInOre = Math.round(totalAmountInOre * (taxRate / 10000) - 1);
+    orderLines.push({
+      name: orderDetail.product,
+      quantity: orderDetail.quantity,
+      unit_price: unitPriceInOre,
+      total_amount: totalAmountForProduct,
+      total_tax_amount: totalTaxAmountForProduct,
+      tax_rate: orderDetail.taxRate,
+      currency: 'SEK',
+      total_discount_amount: 0,
+    });
+  });
 
-  // Logga för felsökning
-  console.log('Total Amount (in SEK):', totalAmount);
-  console.log('Tax Rate:', taxRate);
-  console.log('Calculated Tax Amount (in SEK):', totalAmount * (taxRate / 100));
-  console.log('Total Amount (in Ore):', totalAmountInOre);
-  console.log('Calculated Tax Amount (in Ore):', totalTaxAmountInOre);
+  const totalAmountInOre = Math.round(totalAmount);
+  const totalTaxAmountInOre = Math.round(totalTaxAmount);
 
-  
-  
-  // Skicka ordredatan
+  // Skapa faktureringsadress
+  const billingAddress = {
+    given_name: orderData.name,
+    street_address: orderData.streetAddress,
+    postal_code: orderData.postCode,
+    city: orderData.city,
+    country: orderData.billingCountry
+  };
+
+  // Kontrollera om leveransadressen ska vara samma som faktureringsadressen eller olika
+  const shippingAddress = orderData.useAsShippingAddress ? billingAddress : {
+    given_name: orderData.name,
+    street_address: orderData.shippingStreetAddress || '',
+    postal_code: orderData.shippingPostCode || '',
+    city: orderData.shippingCity || '',
+    country: orderData.shippingCountry || ''
+  };
+
+  console.log('Shipping address:', shippingAddress); // Lägg till logg för att se resultatet
+
   return {
-    purchase_country: 'SE', // Set till ditt land
-    purchase_currency: 'SEK', // Din valuta
-    locale: 'sv-SE', // Din lokal
-    order_amount: totalAmountInOre, // Totalt belopp i ören
-    order_tax_amount: totalTaxAmountInOre, // Skatt i ören (justerat till 249 ören)
-    order_lines: [
-      {
-        name: orderData.orderDetails.product, // Produktnamn
-        quantity: orderData.orderDetails.quantity, // Antal
-        unit_price: Math.round(orderData.orderDetails.unitPrice * 100), // Enhetspris i ören
-        total_amount: totalAmountInOre, // Totalt belopp i ören
-        total_tax_amount: totalTaxAmountInOre, // Skatt i ören
-        tax_rate: taxRate, // Skattesats
-        currency: 'SEK', // Valuta
-        total_discount_amount: 0, // Rabattbelopp (om det finns någon rabatt)
-      },
-    ],
+    purchase_country: 'SE',
+    purchase_currency: 'SEK',
+    locale: 'sv-SE',
+    order_amount: totalAmountInOre,
+    order_tax_amount: totalTaxAmountInOre,
+    billing_address: billingAddress,
+    shipping_address: shippingAddress,
+    order_lines: orderLines,
     merchant_urls: {
-      terms: 'https://www.example.com/terms.html', // Villkor
-      checkout: 'http://localhost:4200/checkout', // Checkout URL
-      confirmation: 'https://www.example.com/confirmation.html', // Bekräftelse URL
-      push: 'https://www.example.com/api/push', // Push URL
+      terms: 'https://www.example.com/terms.html',
+      checkout: 'http://localhost:4200/checkout',
+      confirmation: 'https://www.example.com/confirmation.html',
+      push: 'https://www.example.com/api/push',
     },
   };
 };
+
 
 
 
