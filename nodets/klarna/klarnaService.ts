@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { constructOrderData } from './klarnaPay'; // Import the logic to create the order data
 import dotenv from 'dotenv';
+import { response } from 'express';
 
 dotenv.config();
 
@@ -16,20 +17,22 @@ const klarnaApiKey = process.env.KLARNA_API_KEY || "";
 // Function to create an order with Klarna API
 export const createKlarnaOrder = async (orderData: any) => {
   try {
-      // Ensure orderData includes orderId and other necessary data
-      const orderPayload = constructOrderData(orderData); // Get the order payload to send to Klarna
-      const response = await axios.post<KlarnaOrderResponse>(klarnaApiUrl, orderPayload, {
-        headers: {
-          'Content-Type': 'application/json',
-          'klarna-correlation-id': klarnaCorrelationId,
-          'Authorization': `Basic ${Buffer.from(`${klarnaApiKey}:`).toString('base64')}`
-        }
-      });
-      console.log(response.data);
-      return response.data;
-  } catch (error) {
-      console.error('Error with Klarna API:', error);
-      throw new Error('Failed to create Klarna order');
+    const orderPayload = constructOrderData(orderData);
+    console.log('Order Payload:', orderPayload); // Log the payload for debugging
+
+    const response = await axios.post<KlarnaOrderResponse>(klarnaApiUrl, orderPayload, {
+      headers: {
+        'Content-Type': 'application/json',
+        'klarna-correlation-id': klarnaCorrelationId,
+        'Authorization': `Basic ${Buffer.from(`${klarnaApiKey}:`).toString('base64')}`
+      }
+    });
+
+    console.log('Klarna API Response:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('Klarna API Error:', error.response?.data || error.message); // Log detailed error
+    throw new Error('Failed to create Klarna order');
   }
 };
 

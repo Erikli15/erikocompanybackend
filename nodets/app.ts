@@ -5,6 +5,8 @@ import { configureSession, configurePassport, authenticateGoogle, handleGoogleCa
 import { createKlarnaOrder} from './klarna/klarnaService'; // Import service function
 import passport from 'passport';
 import cors from 'cors';
+import { constructOrderData } from './klarna/klarnaPay';
+import { console } from 'inspector';
 
 const app = express();
 const port = 3000;
