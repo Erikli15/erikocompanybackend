@@ -49,6 +49,7 @@ class Databas
                     `descriptions` varchar(1000),
                     `stockStatus` INT,
                     `imgUrl` varchar(1000),
+                    `views` INT DEFAULT 0,   
                     PRIMARY KEY (`id`)
                     ) ";
 
@@ -182,6 +183,17 @@ class Databas
             return false; // No changes, either the product doesn't exist or stock is already 0
         }
     }
+
+    function getMostViewedProducts($limit = 5)
+    {
+        // SQL-fråga för att hämta de mest visade produkterna
+        $sql = "SELECT * FROM products ORDER BY views DESC LIMIT ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$limit]);
+
+        // Hämta alla produkter som har de högsta visningarna
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 
 // Check if the form was submitted with a POST request
@@ -203,5 +215,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo "Could not decrease stock status for '$productName'.";
         }
     }
+}
+
+// Check if the request is a GET request and 'mostViewed' is set
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['mostViewed'])) {
+    // Anropa funktionen för att hämta de mest visade produkterna
+    $mostViewedProducts = $database->getMostViewedProducts(5); // Hämtar de 5 mest visade produkterna
+
+    // Returnera dessa produkter som JSON
+    echo json_encode($mostViewedProducts);
 }
 ?>
