@@ -1,23 +1,24 @@
-import mysql from 'mysql2';
-import dotenv from 'dotenv';
+import mysql from 'mysql2';  // Import the mysql2 package for database connection
+import dotenv from 'dotenv';  // Import dotenv to load environment variables
 
-dotenv.config();
+dotenv.config();  // Load environment variables from the .env file
 
-// Skapa MySQL-anslutning
+// Create MySQL connection using environment variables for credentials
 const db = mysql.createConnection({
-    host: process.env.DB_SERVERNAME,
-    user: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DBNAME
+    host: process.env.DB_SERVERNAME,  // Database server host
+    user: process.env.DB_USERNAME,    // Database username
+    password: process.env.DB_PASSWORD, // Database password
+    database: process.env.DB_DBNAME   // Name of the database to connect to
 });
 
-// Anslut till databasen
+// Establish a connection to the database
 db.connect(err => {
-    if (err) {
-        console.error('Database connection failed: ' + err.stack);
-        return;
+    if (err) {  // If there's an error during the connection
+        console.error('Database connection failed: ' + err.stack);  // Log the error stack
+        return;  // Exit the function if connection fails
     }
-    console.log('Connected to the database');
+    console.log('Connected to the database');  // Log success message if connected
 });
 
-export default db;
+export default db;  // Export the database connection to be used elsewhere
+

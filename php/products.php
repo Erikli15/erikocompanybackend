@@ -1,14 +1,18 @@
 <?php
 error_reporting(E_ALL & ~E_DEPRECATED);
-// Inkludera filen som innehåller getDataFromGoogleSheet-funktionen
+// Include the file containing the getDataFromGoogleSheet function
 require_once "googleSheet.php";
 require "vendor/autoload.php";
+// Load environment variables from .env file
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../'); // Adjust the path as necessary
 $dotenv->load();
 
+// Create a new instance of the Databas class
 $database = new Databas();
 
+// Insert products into the database from Google Sheets
 $database->insertProductsIntoDatabase($spreadsheetId, $service, $database);
+// Update products in the database from Google Sheets
 $database->updateProductsFromGoogleSheet($spreadsheetId, $service);
 
 class Databas
@@ -18,20 +22,25 @@ class Databas
 
     function __construct()
     {
+        // Initialize database connection using environment variables
         $username = $_ENV["DB_USERNAME"];
         $password = $_ENV["DB_PASSWORD"];
         $host = $_ENV["DB_SERVERNAME"];
         $dbname = $_ENV["DB_DBNAME"];
         $dsn = "mysql:host=$host;dbname=$dbname";
         $this->pdo = new PDO($dsn, $username, $password);
+        // Ensure the 'products' table exists in the database
         $this->ifTabletNotExist();
     }
 
     function ifTabletNotExist()
     {
+        // This ensures the products table is created only once
         static $initialized = false;
         if ($initialized)
             return;
+
+        // SQL query to create the products table if it does not exist
         $sql = "CREATE TABLE IF NOT EXISTS `products` (
                     `id` INT AUTO_INCREMENT NOT NULL,
                     `productName` varchar(200) NOT NULL,
@@ -43,36 +52,39 @@ class Databas
                     PRIMARY KEY (`id`)
                     ) ";
 
+        // Execute the SQL query to create the table
         $this->pdo->exec($sql);
         $initialized = true;
     }
+
     function insertProductsIntoDatabase($spreadsheetId, $service, $database)
     {
-        // Hämta data från Google Sheets
+        // Fetch data from Google Sheets
         $values = getDataFromGoogleSheet($spreadsheetId, $service);
 
-        // Förbered SQL-satsen för att lägga till produkter
+        // Prepare SQL statement for inserting products
         $sqlInsert = "INSERT INTO products (productName, price, category, descriptions, stockStatus, imgUrl) VALUES (?,?,?,?,?,?)";
         $stmtInsert = $database->pdo->prepare($sqlInsert);
 
-        // Förbered SQL-satsen för att kontrollera om produkten redan finns
+        // Prepare SQL statement to check if a product already exists
         $sqlSelect = "SELECT COUNT(*) FROM products WHERE productName = ?";
         $stmtSelect = $database->pdo->prepare($sqlSelect);
 
-        // Loop genom varje rad av data
+        // Loop through each row of data from Google Sheets
         foreach ($values as $index => $row) {
             if ($index === 0)
-                continue; // Hoppa över första raden (rubriker)
+                continue; // Skip the first row (header)
 
-            // Kontrollera att raden har tillräckligt med kolumner
+            // Check if the row has enough columns
             if (count($row) >= 7) {
-                // Kontrollera om produkten redan finns
+                // Check if the product already exists in the database
                 $stmtSelect->execute([$row[1]]);
                 $exists = $stmtSelect->fetchColumn();
 
-                // Om produkten inte finns, lägg till den
+                // If the product does not exist, insert it
                 if ($exists == 0) {
-                    $stmtInsert->execute([$row[1], (float) $row[2], $row[4], $row[4], $row[5], $row[6]]); // Konvertera price till float
+                    // Insert product into the database
+                    $stmtInsert->execute([$row[1], (float) $row[2], $row[4], $row[4], $row[5], $row[6]]); // Convert price to float
                 }
             }
         }
@@ -80,110 +92,115 @@ class Databas
 
     function updateProductsFromGoogleSheet($spreadsheetId, $service)
     {
-        // Hämta data från Google Sheets
+        // Fetch data from Google Sheets
         $values = getDataFromGoogleSheet($spreadsheetId, $service);
 
-        // Här antar vi att första raden är rubriker, så vi börjar på index 1
+        // Iterate through each row of data, starting at index 1 to skip the header row
         foreach ($values as $index => $row) {
             if ($index === 0)
-                continue; // Hoppa över första raden (rubriker)
+                continue; // Skip the first row (header)
 
-            // Kontrollera att vi har tillräckligt med data i raden
+            // Check if the row has enough columns
             if (count($row) >= 7) {
-                $productId = (int) $row[0];        // ID från Google Sheets (kan vara i första kolumnen)
-                $productName = $row[1];           // Namn från andra kolumnen
-                $price = (float) $row[2];          // Pris från tredje kolumnen
-                $category = $row[3];              // Kategori från fjärde kolumnen
-                $descriptions = $row[4];          // Beskrivning från femte kolumnen
-                $stockStatus = (int) $row[5];      // Lagerstatus från sjätte kolumnen
-                $imgUrl = $row[6];                // Bild-URL från sjunde kolumnen
+                // Extract product details from the row
+                $productId = (int) $row[0];        // ID from the first column
+                $productName = $row[1];           // Product name from the second column
+                $price = (float) $row[2];          // Price from the third column
+                $category = $row[3];              // Category from the fourth column
+                $descriptions = $row[4];          // Description from the fifth column
+                $stockStatus = (int) $row[5];      // Stock status from the sixth column
+                $imgUrl = $row[6];                // Image URL from the seventh column
 
-                // Anropa updateProduct för att uppdatera varje produkt i databasen
+                // Call updateProduct to update the product in the database
                 $isUpdated = $this->updateProduct(
-                    $spreadsheetId,   // Om det behövs för Google Sheets
-                    $service,         // Om det behövs för Google Sheets
-                    $this,            // Databasinstansen
-                    $productId,       // Produktens ID
-                    $productName,     // Produktens namn
-                    $price,           // Produktens pris
-                    $category,        // Produktens kategori
-                    $descriptions,    // Produktens beskrivning
-                    $stockStatus,     // Produktens lagerstatus
-                    $imgUrl           // Produktens bild-URL
+                    $spreadsheetId,   // Spreadsheet ID (if needed for Google Sheets)
+                    $service,         // Service (if needed for Google Sheets)
+                    $this,            // Database instance
+                    $productId,       // Product ID
+                    $productName,     // Product name
+                    $price,           // Product price
+                    $category,        // Product category
+                    $descriptions,    // Product description
+                    $stockStatus,     // Product stock status
+                    $imgUrl           // Product image URL
                 );
 
+                // Output success or failure message for each product update
                 if ($isUpdated) {
-                    echo "Produkt $productId uppdaterades framgångsrikt.\n";
+                    echo "Product $productId was successfully updated.\n";
                 } else {
-                    echo "Produkt $productId kunde inte uppdateras.\n";
+                    echo "Product $productId could not be updated.\n";
                 }
             }
         }
     }
+
     function updateProduct($spreadsheetId, $service, $database, $productId, $productName, $price, $category, $descriptions, $stockStatus, $imgUrl)
     {
-        echo "Produkt $productId: $productName, $price, $category, $descriptions, $stockStatus, $imgUrl\n";
+        echo "Product $productId: $productName, $price, $category, $descriptions, $stockStatus, $imgUrl\n";
 
-        // Förbered SQL-satsen för att uppdatera produkten
+        // Prepare SQL statement to update the product
         $sqlUpdate = "UPDATE products SET productName = ?, price = ?, category = ?, descriptions = ?, stockStatus = ?, imgUrl = ? WHERE id = ?";
         $stmtUpdate = $this->pdo->prepare($sqlUpdate);
 
-        // Utför uppdateringen
+        // Execute the update query
         $stmtUpdate->execute([$productName, $price, $category, $descriptions, $stockStatus, $imgUrl, $productId]);
 
-        // Kontrollera om någon rad påverkades (dvs. om produkten uppdaterades)
+        // Check if any rows were affected (i.e., the product was updated)
         if ($stmtUpdate->rowCount() > 1) {
-            return true; // Produkt uppdaterades framgångsrikt
+            return true; // Product was updated successfully
         } else {
-            return false; // Ingen förändring, antingen produkten finns inte eller inga ändringar gjordes
+            return false; // No changes, either the product doesn't exist or no changes were made
         }
     }
 
     function getProductIds()
     {
+        // SQL query to fetch all product IDs
         $sql = "SELECT id FROM products";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
 
-        // Hämta alla ID:n som en array
+        // Return all IDs as an array
         $ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
         return $ids;
     }
 
-
     function decreaseStockStatus($productName)
     {
-        // Förbered SQL-satsen för att minska lagret
+        // SQL query to decrease the stock status of a product, ensuring it doesn't go below 0
         $sqlUpdate = "UPDATE products SET stockStatus = stockStatus - 1 WHERE productName = ? AND stockStatus > 0";
         $stmtUpdate = $this->pdo->prepare($sqlUpdate);
 
-        // Utför uppdateringen
+        // Execute the update query
         $stmtUpdate->execute([$productName]);
 
-        // Kontrollera om någon rad påverkades (dvs. om lagret minskades)
+        // Check if any rows were affected (i.e., stock was decreased)
         if ($stmtUpdate->rowCount() > 1) {
-            return true; // Lager minskades framgångsrikt
+            return true; // Stock was successfully decreased
         } else {
-            return false; // Ingen förändring, antingen produkten finns inte eller lagret är redan 0
+            return false; // No changes, either the product doesn't exist or stock is already 0
         }
     }
 }
+
+// Check if the form was submitted with a POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['insertProducts'])) {
-        // Kör insertProductsIntoDatabase
+        // Run insertProductsIntoDatabase
         $database->insertProductsIntoDatabase($spreadsheetId, $service, $database);
-        echo "Produkter har infogats i databasen.";
+        echo "Products have been inserted into the database.";
     } elseif (isset($_POST['updateProducts'])) {
-        // Kör updateProductsFromGoogleS    heet
+        // Run updateProductsFromGoogleSheet
         $database->updateProductsFromGoogleSheet($spreadsheetId, $service);
-        echo "Produkter har uppdaterats i databasen.";
+        echo "Products have been updated in the database.";
     } elseif (isset($_POST['decreaseStock'])) {
-        // Kör decreaseStockStatus
+        // Run decreaseStockStatus
         $productName = $_POST['productName'];
         if ($database->decreaseStockStatus($productName)) {
-            echo "Lagerstatus för '$productName' har minskats.";
+            echo "Stock status for '$productName' has been decreased.";
         } else {
-            echo "Kunde inte minska lagerstatus för '$productName'.";
+            echo "Could not decrease stock status for '$productName'.";
         }
     }
 }
