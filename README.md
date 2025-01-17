@@ -26,7 +26,7 @@ Innan du börjar måste du se till att följande program är installerade:
 1. **Clone Repository**  
    Börja med att klona detta repository:
    ```bash
-   git clone https://github.com/ditt-användarnamn/backend-server
+   git clone https://github.com/Erikli15/erikocompanybackend.git
    cd backend-server
 
 2. **Installera NPM-paket "package.json"**
